@@ -22,7 +22,9 @@ bash deploy.sh
 
 ```bash
 kubectl port-forward svc/event-journal-service 8080:80
+```
 
+```bash
 curl http://localhost:8080/
 curl http://localhost:8080/status
 curl -X POST http://localhost:8080/log \
@@ -30,9 +32,19 @@ curl -X POST http://localhost:8080/log \
   -d '{"message": "test"}'
 curl http://localhost:8080/logs
 
-kubectl logs $(kubectl get pods -l app=node-journal-watcher -o jsonpath='{.items[0].metadata.name}')
+kubectl logs daemonset/node-journal-watcher
 kubectl get cronjob journal-snapshotter
 ```
+
+## Скриншоты проверки
+
+`curl`-проверка REST API:
+
+![curl verification](images/curl.png)
+
+Проверка Kubernetes-ресурсов и логов:
+
+![kubernetes verification](images/kube.png)
 
 ## Структура проекта
 
