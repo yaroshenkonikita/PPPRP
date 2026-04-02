@@ -1,0 +1,24 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: journal-snapshotter
+spec:
+  schedule: "*/10 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: snapshot-worker
+              image: curlimages/curl:8.12.1
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  TIMESTAMP=$(date +%Y%m%d%H%M%S)
+                  echo "Fetching logs from event-journal-service..."
+                  curl -s http://event-journal-service/logs > /tmp/app.log
+                  tar -czf /tmp/app-logs-${TIMESTAMP}.tar.gz -C /tmp app.log
+                  echo "Archive created: /tmp/app-logs-${TIMESTAMP}.tar.gz"
+                  ls -la /tmp/app-logs-*.tar.gz
+          restartPolicy: OnFailure

@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: node-journal-watcher
+spec:
+  selector:
+    matchLabels:
+      app: node-journal-watcher
+  template:
+    metadata:
+      labels:
+        app: node-journal-watcher
+    spec:
+      containers:
+        - name: journal-watcher
+          image: busybox:1.37
+          command:
+            - /bin/sh
+            - -c
+            - |
+              echo "Node journal watcher started, watching /var/log/event-journal/"
+              while [ ! -f /var/log/event-journal/app.log ]; do
+                echo "Waiting for app.log to appear..."
+                sleep 5
+              done
+              echo "Found app.log, tailing..."
+              tail -F /var/log/event-journal/app.log
+          volumeMounts:
+            - name: journal-share
+              mountPath: /var/log/event-journal
+              readOnly: true
+      volumes:
+        - name: journal-share
+          hostPath:
+            path: /var/log/event-journal
+            type: DirectoryOrCreate

@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: event-journal-probe
+  labels:
+    app: event-journal
+    tier: api
+spec:
+  containers:
+    - name: journal-api
+      image: event-journal-api:latest
+      imagePullPolicy: Never
+      ports:
+        - containerPort: 5000
+      envFrom:
+        - configMapRef:
+            name: journal-api-settings
+      volumeMounts:
+        - name: runtime-journal
+          mountPath: /app/logs
+  volumes:
+    - name: runtime-journal
+      emptyDir: {}

@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: journal-vault
+spec:
+  serviceName: journal-vault-headless
+  replicas: 1
+  selector:
+    matchLabels:
+      app: journal-vault
+  template:
+    metadata:
+      labels:
+        app: journal-vault
+    spec:
+      containers:
+        - name: vault-worker
+          image: busybox:1.37
+          command:
+            - /bin/sh
+            - -c
+            - |
+              echo "Journal vault started"
+              while true; do
+                if [ -f /data/logs/app.log ]; then
+                  cp /data/logs/app.log "/data/archive/app-$(date +%Y%m%d%H%M%S).log"
+                  echo "[$(date)] Archived app.log to /data/archive/"
+                fi
+                sleep 300
+              done
+          volumeMounts:
+            - name: active-journal
+              mountPath: /data/logs
+            - name: archive-buffer
+              mountPath: /data/archive
+      volumes:
+        - name: active-journal
+          hostPath:
+            path: /var/log/event-journal
+            type: DirectoryOrCreate
+        - name: archive-buffer
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: journal-vault-headless
+spec:
+  clusterIP: None
+  selector:
+    app: journal-vault
+  ports:
+    - port: 80
+      targetPort: 80

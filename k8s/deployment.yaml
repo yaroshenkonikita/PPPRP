@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: event-journal-api
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: event-journal
+      tier: api
+  template:
+    metadata:
+      labels:
+        app: event-journal
+        tier: api
+    spec:
+      containers:
+        - name: journal-api
+          image: event-journal-api:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 5000
+          envFrom:
+            - configMapRef:
+                name: journal-api-settings
+          volumeMounts:
+            - name: runtime-journal
+              mountPath: /app/logs
+      volumes:
+        - name: runtime-journal
+          hostPath:
+            path: /var/log/event-journal
+            type: DirectoryOrCreate
